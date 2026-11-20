@@ -1,0 +1,270 @@
+
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#512944">
+<title>MOTIVÉO Complet — Annette Digital</title>
+<style>
+:root{font-family:system-ui,-apple-system,Segoe UI,sans-serif;color:#48253e;background:#fff9f2}
+*{box-sizing:border-box}
+body{margin:0}
+header{background:linear-gradient(125deg,#48213f,#75445f);color:#fff;padding:26px 18px;text-align:center}
+header small{color:#f3d79d;letter-spacing:2px}
+h1{margin:8px 0;font-size:2.1rem}
+main{max-width:780px;margin:auto;padding:18px}
+section{background:white;border:1px solid #eedfdf;border-radius:18px;padding:18px;margin:16px 0;box-shadow:0 5px 20px #4520390c}
+h2{font-size:1.2rem;margin:0 0 12px}
+p{line-height:1.5}
+label{display:block;margin:12px 0 5px;font-weight:600}
+input,textarea,button{font:inherit}
+input[type=text],input[type=date],textarea{width:100%;padding:12px;border:1px solid #cdb6c5;border-radius:10px;background:#fff}
+textarea{min-height:105px;resize:vertical}
+button{border:0;border-radius:10px;padding:11px 16px;background:#542743;color:white;cursor:pointer}
+button:hover{background:#713a5c}
+.light{background:#f5e7ee;color:#48253e}
+.muted{color:#735f6d;font-size:.9rem}
+.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.row input[type=text]{flex:1;min-width:160px}
+.task{display:flex;gap:10px;align-items:center;border-bottom:1px solid #f0e5ea;padding:10px 0}
+.task span{flex:1;overflow-wrap:anywhere}
+.task.done span{text-decoration:line-through;color:#777}
+.task button{padding:7px 10px}
+.entry{border-top:1px solid #f1e7eb;padding:12px 0;white-space:pre-wrap;overflow-wrap:anywhere}
+.progress{height:12px;background:#f1e7ed;border-radius:20px;overflow:hidden}
+.progress>div{height:100%;background:#bd8c54;transition:width .2s}
+.cols{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media(max-width:550px){
+.cols{grid-template-columns:1fr}
+main{padding:12px}
+header{padding:22px 12px}
+}
+footer{text-align:center;padding:20px;color:#735f6d}
+button:focus-visible,input:focus-visible,textarea:focus-visible{outline:3px solid #c89a53;outline-offset:2px}
+</style>
+</head>
+<body>
+<header>
+<small>✦ ANNETTE DIGITAL ✦</small>
+<h1>🌸 MOTIVÉO</h1>
+<div>Mon compagnon motivation au quotidien</div>
+</header>
+<main>
+
+<section>
+<h2 id="hello">Bienvenue 💜</h2>
+<p id="quote"></p>
+<label for="firstName">Mon prénom</label>
+<div class="row">
+<input id="firstName" type="text" maxlength="45" placeholder="Ton prénom" autocomplete="given-name">
+<button id="saveName">Enregistrer</button>
+</div>
+<p class="muted">Tes informations sont enregistrées automatiquement dans ce navigateur sur cet appareil.</p>
+</section>
+
+<section>
+<h2>✨ Mes objectifs</h2>
+<form id="taskForm" class="row">
+<input id="taskInput" type="text" maxlength="180" placeholder="Un petit objectif à accomplir…" aria-label="Nouvel objectif" required>
+<button type="submit">Ajouter</button>
+</form>
+<div id="tasks"></div>
+<p id="count" class="muted"></p>
+<div class="progress" aria-label="Progression des objectifs">
+<div id="bar" style="width:0%"></div>
+</div>
+</section>
+
+<div class="cols">
+<section>
+<h2>🌷 Mon humeur du jour</h2>
+<label for="mood">Comment te sens-tu ?</label>
+<select id="mood" style="width:100%;padding:12px;border:1px solid #cdb6c5;border-radius:10px">
+<option value="">Choisir mon humeur</option>
+<option>😊 Bien</option>
+<option>😌 Calme</option>
+<option>😐 Moyennement</option>
+<option>😟 Inquiète / inquiet</option>
+<option>😴 Fatiguée / fatigué</option>
+</select>
+<p class="muted" id="moodSaved"></p>
+</section>
+<section>
+<h2>🏆 Ma petite victoire</h2>
+<label for="win">Une chose dont je suis fier / fière</label>
+<textarea id="win" placeholder="Aujourd'hui, j'ai réussi à…"></textarea>
+<p class="muted">Enregistrement automatique</p>
+</section>
+</div>
+
+<section>
+<h2>📔 Mon journal positif</h2>
+<label for="journalDate">Date</label>
+<input type="date" id="journalDate">
+<label for="journalText">Ce que je souhaite retenir</label>
+<textarea id="journalText" placeholder="Mes pensées, mes réussites, ma gratitude…"></textarea>
+<div class="row">
+<button id="saveJournal" type="button">Enregistrer cette journée</button>
+<span class="muted" id="journalStatus" role="status"></span>
+</div>
+<h3>Mes journées précédentes</h3>
+<div id="entries"></div>
+</section>
+
+<section>
+<h2>💾 Garder mes souvenirs</h2>
+<p class="muted">Cette version de test ne synchronise pas les appareils. Pour conserver une copie, exporte tes données. Le fichier téléchargé contient des informations personnelles : garde-le en lieu sûr.</p>
+<button id="export" type="button" class="light">Télécharger ma sauvegarde</button>
+</section>
+
+</main>
+<footer>Fait avec 💜 par Annette Digital · Version de test</footer>
+<script>
+(()=>{
+'use strict';
+const KEY='annette_motiveo_complet_v1';
+const $=id=>document.getElementById(id);
+const today=()=>{
+const d=new Date();
+return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')
+};
+let state={name:'',tasks:[],moods:{},wins:{},journal:{}};
+try{
+const stored=JSON.parse(localStorage.getItem(KEY));
+if(stored&&typeof stored==='object')state={...state,...stored};
+}catch(e){}
+if(!Array.isArray(state.tasks))state.tasks=[];
+for(const k of ['moods','wins','journal'])
+if(!state[k]||typeof state[k]!=='object')state[k]={};
+function save(){
+try{
+localStorage.setItem(KEY,JSON.stringify(state));
+}catch(e){
+alert('Impossible d’enregistrer sur cet appareil. Vérifie les paramètres de ton navigateur.')
+}
+}
+const quotes=[
+'Chaque petit pas compte. 🌷',
+'Tu as le droit d’avancer à ton rythme. 💜',
+'Aujourd’hui est une nouvelle occasion de prendre soin de toi. ✨',
+'Une petite victoire reste une victoire. 🌸',
+'Tu peux être fier ou fière du chemin parcouru. ⭐'
+];
+$('quote').textContent=quotes[new Date().getDate()%quotes.length];
+function greeting(){
+$('hello').textContent='Bonjour'+(state.name?' '+state.name:'')+' 💜'
+}
+$('firstName').value=state.name||'';
+greeting();
+$('saveName').onclick=()=>{
+state.name=$('firstName').value.trim().slice(0,45);
+save();
+greeting()
+};
+function renderTasks(){
+const root=$('tasks');
+root.replaceChildren();
+let done=0;
+state.tasks.forEach(t=>{
+if(t.done)done++;
+const div=document.createElement('div');
+div.className='task'+(t.done?' done':'');
+const check=document.createElement('input');
+check.type='checkbox';
+check.checked=!!t.done;
+check.setAttribute('aria-label','Terminer '+t.text);
+check.onchange=()=>{
+t.done=check.checked;
+save();
+renderTasks()
+};
+const span=document.createElement('span');
+span.textContent=t.text;
+const del=document.createElement('button');
+del.type='button';
+del.className='light';
+del.textContent='Supprimer';
+del.setAttribute('aria-label','Supprimer '+t.text);
+del.onclick=()=>{
+state.tasks=state.tasks.filter(x=>x.id!==t.id);
+save();
+renderTasks()
+};
+div.append(check,span,del);
+root.append(div)
+});
+$('count').textContent=state.tasks.length?done+' objectif(s) terminé(s) sur '+state.tasks.length:'Ajoute ton premier objectif !';
+$('bar').style.width=(state.tasks.length?Math.round(100*done/state.tasks.length):0)+'%'
+}
+$('taskForm').onsubmit=e=>{
+e.preventDefault();
+const text=$('taskInput').value.trim();
+if(!text)return;
+state.tasks.push({id:Date.now()+'-'+Math.random(),text,done:false});
+$('taskInput').value='';
+save();
+renderTasks()
+};
+renderTasks();
+const day=today();
+$('mood').value=state.moods[day]||'';
+$('mood').onchange=()=>{
+state.moods[day]=$('mood').value;
+save();
+$('moodSaved').textContent='Humeur enregistrée pour aujourd’hui.'
+};
+$('win').value=state.wins[day]||'';
+$('win').oninput=()=>{
+state.wins[day]=$('win').value;
+save()
+};
+$('journalDate').value=day;
+function renderJournal(){
+const root=$('entries');
+root.replaceChildren();
+const dates=Object.keys(state.journal).filter(d=>state.journal[d]).sort().reverse();
+if(!dates.length){
+const p=document.createElement('p');
+p.className='muted';
+p.textContent='Ton journal est prêt à accueillir tes premières pensées.';
+root.append(p)
+}
+dates.forEach(date=>{
+const div=document.createElement('div');
+div.className='entry';
+const strong=document.createElement('strong');
+strong.textContent=date;
+const p=document.createElement('p');
+p.textContent=state.journal[date];
+div.append(strong,p);
+root.append(div)
+})
+}
+function loadJournal(){
+$('journalText').value=state.journal[$('journalDate').value]||'';
+$('journalStatus').textContent=''
+}
+$('journalDate').onchange=loadJournal;
+$('saveJournal').onclick=()=>{
+const d=$('journalDate').value;
+if(!d)return;
+state.journal[d]=$('journalText').value.trim();
+save();
+renderJournal();
+$('journalStatus').textContent='Journée enregistrée 💜'
+};
+renderJournal();
+$('export').onclick=()=>{
+const blob=new Blob([JSON.stringify({exportDate:new Date().toISOString(),...state},null,2)],{type:'application/json'});
+const url=URL.createObjectURL(blob);
+const a=document.createElement('a');
+a.href=url;
+a.download='motiveo-sauvegarde-'+today()+'.json';
+a.click();
+setTimeout(()=>URL.revokeObjectURL(url),1000)
+};
+})();
+</script>
+</body>
+</html>
